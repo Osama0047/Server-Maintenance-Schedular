@@ -2,114 +2,66 @@ import os
 from datetime import timedelta
 
 class Config:
-    """Base configuration class."""
+    """Base configuration class"""
     
-    # Security
+    # Flask settings
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
-    # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///maintenance_scheduler.db'
+    # Database settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-    }
-    
-    # Scheduler
-    SCHEDULER_TIMEZONE = os.environ.get('TIMEZONE') or 'UTC'
-    SCHEDULER_EXECUTORS = {
-        'default': {'type': 'threadpool', 'max_workers': 20}
-    }
-    SCHEDULER_JOB_DEFAULTS = {
-        'coalesce': False,
-        'max_instances': 3
-    }
-    
-    # Application
-    APP_NAME = 'Server Maintenance Scheduler'
-    APP_VERSION = '1.0.0'
-    
-    # Maintenance defaults
-    DEFAULT_MAINTENANCE_DURATION = timedelta(hours=2)
-    MAX_MAINTENANCE_DURATION = timedelta(days=7)
-    MIN_ADVANCE_NOTICE = timedelta(hours=1)
-    
-    # Logging
-    LOG_LEVEL = os.environ.get('LOG_LEVEL') or 'INFO'
-    LOG_FILE = os.environ.get('LOG_FILE') or 'maintenance_scheduler.log'
-    
-    # Email notifications (if implemented)
-    MAIL_SERVER = os.environ.get('MAIL_SERVER')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
-    
-    # Security headers
-    WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = None
     
     @staticmethod
-    def init_app(app):
-        """Initialize application with this config."""
-        pass
+    def get_database_uri():
+        """Get database URI with proper handling for different environments"""
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url:
+            # Handle Heroku PostgreSQL URL format
+            if database_url.startswith('postgres://'):
+                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            return database_url
+        else:
+            # Use SQLite with proper path for production
+            db_path = os.environ.get('DB_PATH', 'instance')
+            if not os.path.exists(db_path):
+                os.makedirs(db_path, exist_ok=True)
+            # Use absolute path for Windows compatibility
+            db_file = os.path.abspath(os.path.join(db_path, 'maintenance_scheduler.db'))
+            return f'sqlite:///{db_file}'
+    
+    # APScheduler settings
+    SCHEDULER_TIMEZONE = os.environ.get('TIMEZONE', 'UTC')
+    SCHEDULER_API_ENABLED = True
+    
+    # Application settings
+    FLASK_ENV = os.environ.get('FLASK_ENV', 'production')
+    DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 'on']
+    HOST = os.environ.get('HOST', '0.0.0.0')
+    PORT = int(os.environ.get('PORT', 5000))
+    
+    # Logging
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+
+# Set the database URI directly as class attribute
+Config.SQLALCHEMY_DATABASE_URI = Config.get_database_uri()
 
 class DevelopmentConfig(Config):
-    """Development configuration."""
-    
+    """Development configuration"""
     DEBUG = True
-    DEVELOPMENT = True
-    
-    # Less secure settings for development
-    WTF_CSRF_ENABLED = False
-    
-    # More verbose logging
-    LOG_LEVEL = 'DEBUG'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///dev_maintenance_scheduler.db'
 
 class ProductionConfig(Config):
-    """Production configuration."""
-    
+    """Production configuration"""
     DEBUG = False
-    DEVELOPMENT = False
-    
-    # Enhanced security for production
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    
-    # Production database (PostgreSQL recommended)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://user:password@localhost/maintenance_scheduler'
-    
-    @classmethod
-    def init_app(cls, app):
-        """Initialize production app."""
-        Config.init_app(app)
-        
-        # Log to syslog in production
-        import logging
-        from logging.handlers import SysLogHandler
-        syslog_handler = SysLogHandler()
-        syslog_handler.setLevel(logging.WARNING)
-        app.logger.addHandler(syslog_handler)
 
 class TestingConfig(Config):
-    """Testing configuration."""
-    
+    """Testing configuration"""
     TESTING = True
-    WTF_CSRF_ENABLED = False
-    
-    # Use in-memory database for testing
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    
-    # Disable scheduler during testing
-    SCHEDULER_EXECUTORS = {}
 
 # Configuration dictionary
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig,
-    'default': DevelopmentConfig
+    'default': ProductionConfig
 } 

@@ -7,7 +7,7 @@ Run script for starting the application
 import os
 import sys
 import logging
-from app import app, create_tables
+from app import create_app
 
 def setup_logging():
     """Set up logging configuration"""
@@ -17,6 +17,32 @@ def setup_logging():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
+def validate_environment():
+    """Validate environment configuration"""
+    required_env_vars = []
+    missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+    
+    if missing_vars:
+        print(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
+        return False
+    
+    print("✅ Environment validation passed")
+    return True
+
+def test_database_connection(app):
+    """Test database connection"""
+    try:
+        from models import db
+        from sqlalchemy import text
+        with app.app_context():
+            # Test a simple query
+            db.session.execute(text('SELECT 1'))
+        print("✅ Database connection successful")
+        return True
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        return False
+
 def main():
     """Main entry point"""
     print("🚀 Starting Server Maintenance Scheduler...")
@@ -25,17 +51,31 @@ def main():
     # Setup logging
     setup_logging()
     
-    # Create database tables and initialize scheduler
-    print("📊 Initializing database and scheduler...")
-    create_tables()
+    # Validate environment
+    if not validate_environment():
+        sys.exit(1)
+    
+    # Create the application
+    print("📊 Initializing application...")
+    try:
+        app = create_app()
+    except Exception as e:
+        print(f"❌ Application initialization failed: {e}")
+        sys.exit(1)
+    
+    # Test database connection
+    if not test_database_connection(app):
+        print("💡 Tip: Check your DATABASE_URL environment variable")
+        sys.exit(1)
     
     # Get configuration from environment
     host = os.environ.get('HOST', '0.0.0.0')
     port = int(os.environ.get('PORT', 5000))
-    debug = os.environ.get('DEBUG', 'True').lower() in ['true', '1', 'on']
+    debug = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 'on']
     
     print(f"🌐 Server will be available at: http://localhost:{port}")
     print(f"🔧 Debug mode: {'Enabled' if debug else 'Disabled'}")
+    print(f"🗄️  Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
     print("=" * 50)
     print("✅ Server Maintenance Scheduler is ready!")
     print("📱 Open your browser and navigate to the URL above")
