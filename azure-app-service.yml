@@ -1,0 +1,27 @@
+# Azure App Service Configuration
+# This file configures the Python app for Azure App Service deployment
+
+python_version: "3.11"
+startup_command: "gunicorn --bind=0.0.0.0:8000 --timeout 600 app:app"
+
+# App Service specific settings
+app_settings:
+  - name: WEBSITES_PORT
+    value: "8000"
+  - name: FLASK_ENV
+    value: "production"
+  - name: PYTHONPATH
+    value: "/home/site/wwwroot"
+  - name: SCM_DO_BUILD_DURING_DEPLOYMENT
+    value: "true"
+
+# Required for Flask apps
+web_config: |
+  <?xml version="1.0" encoding="utf-8"?>
+  <configuration>
+    <system.webServer>
+      <handlers>
+        <add name="Python FastCGI" path="*" verb="*" modules="FastCgiModule" scriptProcessor="D:\home\Python311\python.exe|D:\home\Python311\wfastcgi.py" resourceType="Unspecified" requireAccess="Script" />
+      </handlers>
+    </system.webServer>
+  </configuration> 

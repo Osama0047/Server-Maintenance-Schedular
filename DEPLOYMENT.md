@@ -101,7 +101,97 @@ docker run -d \
 4. Set environment variables
 5. Deploy
 
-### 5. AWS EC2 (Manual Setup)
+### 5. Azure (Multiple Options)
+
+#### Option A: Azure App Service (Recommended)
+
+**Prerequisites:**
+- Azure account and subscription
+- Azure CLI installed
+
+**Quick Deploy:**
+```bash
+# Make the deployment script executable
+chmod +x deploy-azure.sh
+
+# Run the automated deployment script
+./deploy-azure.sh
+```
+
+**Manual Steps:**
+```bash
+# Login to Azure
+az login
+
+# Create resource group
+az group create --name myResourceGroup --location eastus
+
+# Create App Service plan
+az appservice plan create \
+  --name myAppServicePlan \
+  --resource-group myResourceGroup \
+  --sku B1 \
+  --is-linux
+
+# Create Web App
+az webapp create \
+  --resource-group myResourceGroup \
+  --plan myAppServicePlan \
+  --name my-maintenance-scheduler \
+  --runtime "PYTHON|3.11"
+
+# Configure app settings
+az webapp config appsettings set \
+  --resource-group myResourceGroup \
+  --name my-maintenance-scheduler \
+  --settings SECRET_KEY="your-secure-key" FLASK_ENV="production"
+
+# Deploy from local Git
+az webapp deployment source config-local-git \
+  --resource-group myResourceGroup \
+  --name my-maintenance-scheduler
+
+# Add Azure remote and deploy
+git remote add azure <deployment_url>
+git push azure main
+```
+
+#### Option B: Azure Container Instances
+
+**Prerequisites:**
+- Docker installed locally
+- Azure CLI installed
+
+**Steps:**
+```bash
+# Create Azure Container Registry
+az acr create --resource-group myResourceGroup \
+  --name myregistry --sku Basic
+
+# Build and push image
+az acr build --registry myregistry \
+  --image maintenance-scheduler:latest .
+
+# Deploy to Container Instances
+az container create \
+  --resource-group myResourceGroup \
+  --name maintenance-app \
+  --image myregistry.azurecr.io/maintenance-scheduler:latest \
+  --dns-name-label maintenance-scheduler \
+  --ports 5000 \
+  --environment-variables SECRET_KEY="your-key"
+```
+
+#### Option C: Azure DevOps CI/CD
+
+Use the provided `azure-pipelines.yml` file:
+1. Create Azure DevOps project
+2. Connect to your repository
+3. Create new pipeline using `azure-pipelines.yml`
+4. Configure service connections and variables
+5. Run pipeline for automated deployment
+
+### 6. AWS EC2 (Manual Setup)
 
 **Prerequisites:**
 - AWS EC2 instance (Ubuntu/Amazon Linux)
@@ -172,6 +262,19 @@ export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
 export FLASK_ENV="production"
 export LOG_LEVEL="INFO"
 export DATABASE_URL="postgresql://user:pass@localhost/maintenance_scheduler"
+```
+
+### Azure-Specific Environment Variables
+```bash
+# For Azure App Service
+export WEBSITES_PORT="8000"
+export SCM_DO_BUILD_DURING_DEPLOYMENT="true"
+
+# For Azure Database for PostgreSQL
+export DATABASE_URL="postgresql://username@servername:password@servername.postgres.database.azure.com:5432/maintenance_scheduler?sslmode=require"
+
+# For Azure KeyVault integration (optional)
+export AZURE_KEY_VAULT_URL="https://your-keyvault.vault.azure.net/"
 ```
 
 ## 🛡️ Security Considerations
