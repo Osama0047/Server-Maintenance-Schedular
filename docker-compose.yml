@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=your-production-secret-key-here
+      - DATABASE_URL=sqlite:///maintenance_scheduler.db
+      - FLASK_ENV=production
+      - LOG_LEVEL=INFO
+    volumes:
+      - app_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add PostgreSQL database for production
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_DB=maintenance_scheduler
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=your-db-password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+volumes:
+  app_data:
+  # postgres_data: 

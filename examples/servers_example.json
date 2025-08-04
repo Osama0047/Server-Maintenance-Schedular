@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Web Server 1",
+    "hostname": "web01.example.com",
+    "ip_address": "192.168.1.10",
+    "description": "Production web server"
+  },
+  {
+    "name": "Web Server 2",
+    "hostname": "web02.example.com",
+    "ip_address": "192.168.1.11",
+    "description": "Backup web server"
+  },
+  {
+    "name": "Database Server",
+    "hostname": "db01.example.com",
+    "ip_address": "192.168.1.20",
+    "description": "Primary database server"
+  },
+  {
+    "name": "Database Replica",
+    "hostname": "db02.example.com",
+    "ip_address": "192.168.1.21",
+    "description": "Database replica server"
+  },
+  {
+    "name": "API Server",
+    "hostname": "api01.example.com",
+    "ip_address": "192.168.1.30",
+    "description": "REST API server"
+  },
+  {
+    "name": "Load Balancer",
+    "hostname": "lb01.example.com",
+    "ip_address": "192.168.1.5",
+    "description": "Main load balancer"
+  },
+  {
+    "name": "File Server",
+    "hostname": "files01.example.com",
+    "ip_address": "192.168.1.40",
+    "description": "Document storage server"
+  },
+  {
+    "name": "Monitoring Server",
+    "hostname": "monitor01.example.com",
+    "ip_address": "192.168.1.50",
+    "description": "System monitoring and alerts"
+  }
+] 

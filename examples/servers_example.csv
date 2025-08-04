@@ -1,0 +1,9 @@
+name,hostname,ip_address,description
+Web Server 1,web01.example.com,192.168.1.10,Production web server
+Web Server 2,web02.example.com,192.168.1.11,Backup web server
+Database Server,db01.example.com,192.168.1.20,Primary database server
+Database Replica,db02.example.com,192.168.1.21,Database replica server
+API Server,api01.example.com,192.168.1.30,REST API server
+Load Balancer,lb01.example.com,192.168.1.5,Main load balancer
+File Server,files01.example.com,192.168.1.40,Document storage server
+Monitoring Server,monitor01.example.com,192.168.1.50,System monitoring and alerts 

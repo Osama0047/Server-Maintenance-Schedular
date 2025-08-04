@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Server Maintenance Scheduler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" id="stats-cards">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Servers</h5>
+                        <h2 class="mb-0" id="total-servers">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-server fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Online</h5>
+                        <h2 class="mb-0" id="online-servers">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">In Maintenance</h5>
+                        <h2 class="mb-0" id="maintenance-servers">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tools fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Offline</h5>
+                        <h2 class="mb-0" id="offline-servers">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Maintenance Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Scheduled</h5>
+                        <h2 class="mb-0" id="scheduled-maintenance">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">In Progress</h5>
+                        <h2 class="mb-0" id="in-progress-maintenance">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cog fa-spin fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Upcoming (24h)</h5>
+                        <h2 class="mb-0" id="upcoming-maintenance">-</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="row">
+    <!-- Server Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    Server Status
+                </h5>
+                <a href="{{ url_for('servers_page') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Manage
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="servers-list">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Maintenance -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Recent Maintenance
+                </h5>
+                <a href="{{ url_for('maintenance_page') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Schedule
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="maintenance-list">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('servers_page') }}" class="btn btn-primary btn-block w-100">
+                            <i class="fas fa-plus me-2"></i>Add Server
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('maintenance_page') }}" class="btn btn-info btn-block w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>Schedule Maintenance
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-secondary btn-block w-100" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-info btn-block w-100" onclick="viewScheduledJobs()">
+                            <i class="fas fa-list me-2"></i>Scheduled Jobs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadDashboardData();
+    
+    // Refresh data every 30 seconds
+    setInterval(loadDashboardData, 30000);
+});
+
+function loadDashboardData() {
+    // Load statistics
+    $.get('/api/dashboard/stats', function(data) {
+        $('#total-servers').text(data.servers.total);
+        $('#online-servers').text(data.servers.online);
+        $('#maintenance-servers').text(data.servers.maintenance);
+        $('#offline-servers').text(data.servers.offline);
+        
+        $('#scheduled-maintenance').text(data.maintenance.scheduled);
+        $('#in-progress-maintenance').text(data.maintenance.in_progress);
+        $('#upcoming-maintenance').text(data.maintenance.upcoming_24h);
+    }).fail(function() {
+        console.error('Failed to load dashboard stats');
+    });
+    
+    // Load servers
+    $.get('/api/servers', function(data) {
+        let html = '';
+        if (data.length === 0) {
+            html = '<p class="text-muted text-center">No servers registered</p>';
+        } else {
+            data.slice(0, 5).forEach(function(server) {
+                let statusClass = getStatusClass(server.status);
+                let statusIcon = getStatusIcon(server.status);
+                
+                html += `
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>${server.name}</strong><br>
+                            <small class="text-muted">${server.hostname}</small>
+                        </div>
+                        <span class="badge ${statusClass}">
+                            <i class="${statusIcon} me-1"></i>${server.status}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            if (data.length > 5) {
+                html += `<p class="text-center mt-2 mb-0"><small>... and ${data.length - 5} more</small></p>`;
+            }
+        }
+        $('#servers-list').html(html);
+    }).fail(function() {
+        $('#servers-list').html('<p class="text-danger text-center">Failed to load servers</p>');
+    });
+    
+    // Load maintenance schedules
+    $.get('/api/maintenance', function(data) {
+        let html = '';
+        if (data.length === 0) {
+            html = '<p class="text-muted text-center">No maintenance scheduled</p>';
+        } else {
+            data.slice(0, 5).forEach(function(maintenance) {
+                let statusClass = getMaintenanceStatusClass(maintenance.status);
+                let statusIcon = getMaintenanceStatusIcon(maintenance.status);
+                let startDate = new Date(maintenance.scheduled_start).toLocaleDateString();
+                
+                html += `
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>${maintenance.title}</strong><br>
+                            <small class="text-muted">${maintenance.server_name} - ${startDate}</small>
+                        </div>
+                        <span class="badge ${statusClass}">
+                            <i class="${statusIcon} me-1"></i>${maintenance.status}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            if (data.length > 5) {
+                html += `<p class="text-center mt-2 mb-0"><small>... and ${data.length - 5} more</small></p>`;
+            }
+        }
+        $('#maintenance-list').html(html);
+    }).fail(function() {
+        $('#maintenance-list').html('<p class="text-danger text-center">Failed to load maintenance schedules</p>');
+    });
+}
+
+function getStatusClass(status) {
+    switch(status) {
+        case 'online': return 'bg-success';
+        case 'maintenance': return 'bg-warning';
+        case 'offline': return 'bg-danger';
+        default: return 'bg-secondary';
+    }
+}
+
+function getStatusIcon(status) {
+    switch(status) {
+        case 'online': return 'fas fa-check-circle';
+        case 'maintenance': return 'fas fa-tools';
+        case 'offline': return 'fas fa-times-circle';
+        default: return 'fas fa-question-circle';
+    }
+}
+
+function getMaintenanceStatusClass(status) {
+    switch(status) {
+        case 'scheduled': return 'bg-info';
+        case 'in_progress': return 'bg-warning';
+        case 'completed': return 'bg-success';
+        case 'cancelled': return 'bg-secondary';
+        default: return 'bg-secondary';
+    }
+}
+
+function getMaintenanceStatusIcon(status) {
+    switch(status) {
+        case 'scheduled': return 'fas fa-calendar';
+        case 'in_progress': return 'fas fa-cog fa-spin';
+        case 'completed': return 'fas fa-check';
+        case 'cancelled': return 'fas fa-times';
+        default: return 'fas fa-question';
+    }
+}
+
+function refreshDashboard() {
+    loadDashboardData();
+}
+
+function viewScheduledJobs() {
+    $.get('/api/scheduler/jobs', function(data) {
+        let html = '<div class="modal fade" id="jobsModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">';
+        html += '<div class="modal-header"><h5 class="modal-title">Scheduled Jobs</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+        html += '<div class="modal-body">';
+        
+        if (data.length === 0) {
+            html += '<p class="text-muted">No jobs scheduled</p>';
+        } else {
+            data.forEach(function(job) {
+                html += `<p><strong>${job.id}</strong><br><small>Next run: ${job.next_run_time || 'N/A'}</small></p>`;
+            });
+        }
+        
+        html += '</div></div></div></div>';
+        
+        $('body').append(html);
+        $('#jobsModal').modal('show');
+        $('#jobsModal').on('hidden.bs.modal', function() {
+            $(this).remove();
+        });
+    });
+}
+</script>
+{% endblock %} 

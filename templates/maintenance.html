@@ -1,0 +1,555 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance - Server Maintenance Scheduler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-tools me-2"></i>
+                Maintenance Management
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMaintenanceModal">
+                <i class="fas fa-plus me-2"></i>Schedule Maintenance
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <select class="form-select" id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" id="serverFilter">
+            <option value="">All Servers</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-outline-secondary" onclick="loadMaintenanceSchedules()">
+            <i class="fas fa-sync-alt me-1"></i>Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Maintenance Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Maintenance Schedules</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="maintenanceTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Server</th>
+                                <th>Scheduled Start</th>
+                                <th>Scheduled End</th>
+                                <th>Status</th>
+                                <th>Recurring</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenanceTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Maintenance Modal -->
+<div class="modal fade" id="addMaintenanceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule Maintenance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addMaintenanceForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenanceTitle" class="form-label">Title *</label>
+                                <input type="text" class="form-control" id="maintenanceTitle" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenanceServer" class="form-label">Server *</label>
+                                <select class="form-select" id="maintenanceServer" name="server_id" required>
+                                    <option value="">Select Server</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenanceStartDate" class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="maintenanceStartDate" name="start_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenanceStartTime" class="form-label">Start Time *</label>
+                                <input type="time" class="form-control" id="maintenanceStartTime" name="start_time" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenanceEndDate" class="form-label">End Date *</label>
+                                <input type="date" class="form-control" id="maintenanceEndDate" name="end_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenanceEndTime" class="form-label">End Time *</label>
+                                <input type="time" class="form-control" id="maintenanceEndTime" name="end_time" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="maintenanceDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="maintenanceDescription" name="description" rows="3" placeholder="Describe the maintenance tasks..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="maintenanceRecurring" name="recurring">
+                                <label class="form-check-label" for="maintenanceRecurring">
+                                    Recurring Maintenance
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenancePattern" class="form-label">Recurrence Pattern</label>
+                                <select class="form-select" id="maintenancePattern" name="recurring_pattern" disabled>
+                                    <option value="">Select Pattern</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Schedule Maintenance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Maintenance Modal -->
+<div class="modal fade" id="editMaintenanceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Maintenance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editMaintenanceForm">
+                <input type="hidden" id="editMaintenanceId" name="id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenanceTitle" class="form-label">Title *</label>
+                                <input type="text" class="form-control" id="editMaintenanceTitle" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenanceServer" class="form-label">Server</label>
+                                <input type="text" class="form-control" id="editMaintenanceServer" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenanceStartDate" class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="editMaintenanceStartDate" name="start_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenanceStartTime" class="form-label">Start Time *</label>
+                                <input type="time" class="form-control" id="editMaintenanceStartTime" name="start_time" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenanceEndDate" class="form-label">End Date *</label>
+                                <input type="date" class="form-control" id="editMaintenanceEndDate" name="end_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenanceEndTime" class="form-label">End Time *</label>
+                                <input type="time" class="form-control" id="editMaintenanceEndTime" name="end_time" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editMaintenanceDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editMaintenanceDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="editMaintenanceRecurring" name="recurring">
+                                <label class="form-check-label" for="editMaintenanceRecurring">
+                                    Recurring Maintenance
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMaintenancePattern" class="form-label">Recurrence Pattern</label>
+                                <select class="form-select" id="editMaintenancePattern" name="recurring_pattern">
+                                    <option value="">Select Pattern</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadServers();
+    loadMaintenanceSchedules();
+    
+    // Add maintenance form submission
+    $('#addMaintenanceForm').submit(function(e) {
+        e.preventDefault();
+        addMaintenance();
+    });
+    
+    // Edit maintenance form submission
+    $('#editMaintenanceForm').submit(function(e) {
+        e.preventDefault();
+        updateMaintenance();
+    });
+    
+    // Toggle recurring pattern dropdown
+    $('#maintenanceRecurring').change(function() {
+        $('#maintenancePattern').prop('disabled', !this.checked);
+        if (!this.checked) {
+            $('#maintenancePattern').val('');
+        }
+    });
+    
+    $('#editMaintenanceRecurring').change(function() {
+        $('#editMaintenancePattern').prop('disabled', !this.checked);
+        if (!this.checked) {
+            $('#editMaintenancePattern').val('');
+        }
+    });
+    
+    // Filter change handlers
+    $('#statusFilter, #serverFilter').change(function() {
+        loadMaintenanceSchedules();
+    });
+    
+    // Set default dates to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    $('#maintenanceStartDate, #maintenanceEndDate').val(tomorrowStr);
+});
+
+function loadServers() {
+    $.get('/api/servers', function(data) {
+        let options = '<option value="">Select Server</option>';
+        let filterOptions = '<option value="">All Servers</option>';
+        
+        data.forEach(function(server) {
+            options += `<option value="${server.id}">${server.name}</option>`;
+            filterOptions += `<option value="${server.id}">${server.name}</option>`;
+        });
+        
+        $('#maintenanceServer').html(options);
+        $('#serverFilter').html(filterOptions);
+    });
+}
+
+function loadMaintenanceSchedules() {
+    const statusFilter = $('#statusFilter').val();
+    const serverFilter = $('#serverFilter').val();
+    
+    $.get('/api/maintenance', function(data) {
+        let filteredData = data;
+        
+        if (statusFilter) {
+            filteredData = filteredData.filter(m => m.status === statusFilter);
+        }
+        
+        if (serverFilter) {
+            filteredData = filteredData.filter(m => m.server_id == serverFilter);
+        }
+        
+        let html = '';
+        
+        if (filteredData.length === 0) {
+            html = '<tr><td colspan="7" class="text-center text-muted">No maintenance schedules found</td></tr>';
+        } else {
+            filteredData.forEach(function(maintenance) {
+                let statusClass = getMaintenanceStatusClass(maintenance.status);
+                let statusIcon = getMaintenanceStatusIcon(maintenance.status);
+                
+                const startDate = new Date(maintenance.scheduled_start);
+                const endDate = new Date(maintenance.scheduled_end);
+                
+                html += `
+                    <tr>
+                        <td>
+                            <strong>${maintenance.title}</strong>
+                            ${maintenance.description ? '<br><small class="text-muted">' + maintenance.description.substring(0, 50) + (maintenance.description.length > 50 ? '...' : '') + '</small>' : ''}
+                        </td>
+                        <td>${maintenance.server_name}</td>
+                        <td>${startDate.toLocaleString()}</td>
+                        <td>${endDate.toLocaleString()}</td>
+                        <td>
+                            <span class="badge ${statusClass}">
+                                <i class="${statusIcon} me-1"></i>${maintenance.status.replace('_', ' ')}
+                            </span>
+                        </td>
+                        <td>
+                            ${maintenance.recurring ? 
+                                `<span class="badge bg-info"><i class="fas fa-repeat me-1"></i>${maintenance.recurring_pattern || 'Yes'}</span>` : 
+                                '<span class="text-muted">No</span>'
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                ${maintenance.status === 'scheduled' ? 
+                                    `<button class="btn btn-outline-primary" onclick="editMaintenance(${maintenance.id})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="cancelMaintenance(${maintenance.id}, '${maintenance.title}')" title="Cancel">
+                                        <i class="fas fa-ban"></i>
+                                    </button>` : ''
+                                }
+                                <button class="btn btn-outline-danger" onclick="deleteMaintenance(${maintenance.id}, '${maintenance.title}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        $('#maintenanceTableBody').html(html);
+    }).fail(function() {
+        $('#maintenanceTableBody').html('<tr><td colspan="7" class="text-center text-danger">Failed to load maintenance schedules</td></tr>');
+    });
+}
+
+function addMaintenance() {
+    const startDateTime = $('#maintenanceStartDate').val() + 'T' + $('#maintenanceStartTime').val();
+    const endDateTime = $('#maintenanceEndDate').val() + 'T' + $('#maintenanceEndTime').val();
+    
+    const formData = {
+        title: $('#maintenanceTitle').val(),
+        server_id: parseInt($('#maintenanceServer').val()),
+        scheduled_start: startDateTime,
+        scheduled_end: endDateTime,
+        description: $('#maintenanceDescription').val(),
+        recurring: $('#maintenanceRecurring').is(':checked'),
+        recurring_pattern: $('#maintenanceRecurring').is(':checked') ? $('#maintenancePattern').val() : null
+    };
+    
+    $.ajax({
+        url: '/api/maintenance',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(data) {
+            $('#addMaintenanceModal').modal('hide');
+            $('#addMaintenanceForm')[0].reset();
+            loadMaintenanceSchedules();
+            showAlert('Maintenance scheduled successfully!', 'success');
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON?.error || 'Failed to schedule maintenance';
+            showAlert(error, 'danger');
+        }
+    });
+}
+
+function editMaintenance(maintenanceId) {
+    $.get(`/api/maintenance/${maintenanceId}`, function(maintenance) {
+        $('#editMaintenanceId').val(maintenance.id);
+        $('#editMaintenanceTitle').val(maintenance.title);
+        $('#editMaintenanceServer').val(maintenance.server_name);
+        $('#editMaintenanceDescription').val(maintenance.description);
+        $('#editMaintenanceRecurring').prop('checked', maintenance.recurring);
+        $('#editMaintenancePattern').val(maintenance.recurring_pattern);
+        $('#editMaintenancePattern').prop('disabled', !maintenance.recurring);
+        
+        const startDate = new Date(maintenance.scheduled_start);
+        const endDate = new Date(maintenance.scheduled_end);
+        
+        $('#editMaintenanceStartDate').val(startDate.toISOString().split('T')[0]);
+        $('#editMaintenanceStartTime').val(startDate.toTimeString().slice(0, 5));
+        $('#editMaintenanceEndDate').val(endDate.toISOString().split('T')[0]);
+        $('#editMaintenanceEndTime').val(endDate.toTimeString().slice(0, 5));
+        
+        $('#editMaintenanceModal').modal('show');
+    }).fail(function() {
+        showAlert('Failed to load maintenance details', 'danger');
+    });
+}
+
+function updateMaintenance() {
+    const maintenanceId = $('#editMaintenanceId').val();
+    const startDateTime = $('#editMaintenanceStartDate').val() + 'T' + $('#editMaintenanceStartTime').val();
+    const endDateTime = $('#editMaintenanceEndDate').val() + 'T' + $('#editMaintenanceEndTime').val();
+    
+    const formData = {
+        title: $('#editMaintenanceTitle').val(),
+        scheduled_start: startDateTime,
+        scheduled_end: endDateTime,
+        description: $('#editMaintenanceDescription').val(),
+        recurring: $('#editMaintenanceRecurring').is(':checked'),
+        recurring_pattern: $('#editMaintenanceRecurring').is(':checked') ? $('#editMaintenancePattern').val() : null
+    };
+    
+    $.ajax({
+        url: `/api/maintenance/${maintenanceId}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(data) {
+            $('#editMaintenanceModal').modal('hide');
+            loadMaintenanceSchedules();
+            showAlert('Maintenance updated successfully!', 'success');
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON?.error || 'Failed to update maintenance';
+            showAlert(error, 'danger');
+        }
+    });
+}
+
+function cancelMaintenance(maintenanceId, maintenanceTitle) {
+    if (confirm(`Are you sure you want to cancel maintenance "${maintenanceTitle}"?`)) {
+        $.ajax({
+            url: `/api/maintenance/${maintenanceId}/cancel`,
+            method: 'POST',
+            success: function() {
+                loadMaintenanceSchedules();
+                showAlert('Maintenance cancelled successfully!', 'success');
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.error || 'Failed to cancel maintenance';
+                showAlert(error, 'danger');
+            }
+        });
+    }
+}
+
+function deleteMaintenance(maintenanceId, maintenanceTitle) {
+    if (confirm(`Are you sure you want to delete maintenance "${maintenanceTitle}"?`)) {
+        $.ajax({
+            url: `/api/maintenance/${maintenanceId}`,
+            method: 'DELETE',
+            success: function() {
+                loadMaintenanceSchedules();
+                showAlert('Maintenance deleted successfully!', 'success');
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.error || 'Failed to delete maintenance';
+                showAlert(error, 'danger');
+            }
+        });
+    }
+}
+
+function getMaintenanceStatusClass(status) {
+    switch(status) {
+        case 'scheduled': return 'bg-info';
+        case 'in_progress': return 'bg-warning text-dark';
+        case 'completed': return 'bg-success';
+        case 'cancelled': return 'bg-secondary';
+        default: return 'bg-secondary';
+    }
+}
+
+function getMaintenanceStatusIcon(status) {
+    switch(status) {
+        case 'scheduled': return 'fas fa-calendar';
+        case 'in_progress': return 'fas fa-cog fa-spin';
+        case 'completed': return 'fas fa-check';
+        case 'cancelled': return 'fas fa-times';
+        default: return 'fas fa-question';
+    }
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('.container-fluid').prepend(alertHtml);
+    
+    setTimeout(function() {
+        $('.alert').alert('close');
+    }, 5000);
+}
+</script>
+{% endblock %} 
